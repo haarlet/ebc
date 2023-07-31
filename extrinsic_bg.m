@@ -12,26 +12,32 @@ function [bgi,bgspec] = extrinsic_bg(x,Kmx,varargin)
 %
 % Outputs:
 % bgi: logical array the same size as x containing false for non-background
-% pixels and true for background pixels
+% pixels (intensities) and true for background pixels (intensities)
 % bgspec (optional): outputs an estimated background spectrum if the array of spectra is input
 % 
 % Optional Inputs (Name/Value pairs in MATLAB style) 
 % 'Algorithm': either 'kmeans' or 'gmm'. defaults to 'kmeans'
 % 'Outliers': true/false. true runs an outlier detection based on a nearest-neighbor proximity.
-% 'Display': prints various information in the MATLAB command window after the completion of an iteration.
+% 'Display': true/false. true prints various information in the MATLAB command window after the completion of an iteration.
 % 'PadEdges': integer. Disregards the pixels that are this number of pixels from the edge of an image.
 % 'Replicates': integer. Number of replicates to run in a single instance of kmeans or GMM. defaults to 1. 
 % 'Maxiter': integer. maximum number of iterations in a single instance of kmeans or GMM. defaults to 100. 
-% 'GMMTolerance': double: convergence tolerance in the GMM. defaults to 1e-6.
+% 'GMMTolerance': double. convergence tolerance in the GMM. defaults to 1e-6.
 % 'SearchAlgorithm': 'bisect' or 'increment'. Defaults to 'bisect'.
-% 'Spectra': 2-D array with numel(x) rows. Used to compute a background spectrum if desired.
+% 'Spectra': 2-D array with numel(x) rows sorted in order of linear index in the image.
+%            Used to compute a background spectrum if desired.
 % 'UseParallel': true/false. Defaults to false.
 % 'ManualExclude': linear indices of any pixels to manually exclude from the computation.
 %
-% Last updated May 23, 2022
+% Notes:
+% - There is a bug in the 'bisect' search in which the final K is run
+% twice. It is still much faster than 'increment' in most cases.
+%
+% Last updated July 31, 2023
 % J. Nicholas Taylor
 % National Institute of Advanced Industrial Science and Technology
-% jntaylor@aist.go.jp
+% Photonics and Biosensing Open Innovation Laboratory
+% jn.taylor@aist.go.jp
 
 % Parse inputs
 [algo,runoutliers,display,pad,reps,maxiter,salgo,spectra,gmmtol,...
@@ -161,7 +167,7 @@ else
     bgspec  = {};
 end
 
-% Output diaplay
+% Output display
 if display
     if Kmxflag
         warning('\n%s%d%s','Didn''t converge at Kmax = ',K,'. Try increasing Kmax.')
